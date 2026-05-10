@@ -122,11 +122,16 @@ jobs:
       - run: mise run ci:lint native
       - name: Run tests (Linux OpenGL — Xvfb + Mesa llvmpipe)
         if: ${{ contains(matrix.variant, 'opengl') && runner.os == 'Linux' }}
-        # xvfb-run provides a virtual X11 display so Mesa's EGL/GLX can open a
-        # display connection. LIBGL_ALWAYS_SOFTWARE=1 forces the llvmpipe
-        # software rasterizer since CI runners have no GPU.
+        # xvfb-run provides a virtual X11 display for any code that opens
+        # a display connection, but we direct Mesa's EGL to the surfaceless
+        # platform explicitly so it does not need X11 internals.
+        # EGL_PLATFORM=surfaceless — use EGL surfaceless platform (pbuffer only)
+        # LIBGL_ALWAYS_SOFTWARE=1  — force llvmpipe software rasterizer
+        # GALLIUM_DRIVER=llvmpipe  — select llvmpipe inside Mesa explicitly
         env:
+          EGL_PLATFORM: surfaceless
           LIBGL_ALWAYS_SOFTWARE: "1"
+          GALLIUM_DRIVER: llvmpipe
         run: xvfb-run mise run test
       # Windows builds successfully, but native tests are runtime-broken for now.
       - name: Run tests (Windows OpenGL — Mesa llvmpipe)

@@ -89,8 +89,12 @@ fn addCTests(b: *std.Build, options: BuildOptions) *std.Build.Step.Compile {
             },
             else => {
                 // EGL is needed for the test binary to link against libmaplibre-native-c.so.
-                // GLESv2 is not needed here: the tests do not call GL functions
-                // directly, and the shared library already encapsulates them.
+                // Add pixi's lib dir to the rpath so the same libEGL.so that
+                // libmaplibre-native-c.so uses is also loaded by the test binary —
+                // having two different libEGL instances (pixi vs system GLVND) in the
+                // same process splits EGL state and causes eglMakeCurrent to fail.
+                c_tests.root_module.addLibraryPath(pixiLibraryDir(b, options.target));
+                c_tests.root_module.addRPath(pixiLibraryDir(b, options.target));
                 c_tests.root_module.linkSystemLibrary("EGL", .{});
             },
         }
