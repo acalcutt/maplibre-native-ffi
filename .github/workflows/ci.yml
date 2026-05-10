@@ -67,6 +67,9 @@ jobs:
             .git/modules/third_party/maplibre-native
           key: mln-src-v2-${{ hashFiles('.gitmodules', 'cmake/mln_version.cmake') }}
       - uses: ./.github/actions/setup-ci-deps
+      - name: Set up MSVC developer tools (Windows only)
+        if: ${{ runner.os == 'Windows' }}
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
       - name: Install EGL/GLES2 dev libraries (Linux OpenGL only)
         if: ${{ contains(matrix.variant, 'opengl') && runner.os == 'Linux' }}
         # libegl-dev    — provides /usr/lib/.../libEGL.so (unversioned symlink)
@@ -92,6 +95,30 @@ jobs:
         #                     rasterizer (often pre-installed; listed for clarity).
         run: sudo apt-get update -y && sudo apt-get install -y --no-install-recommends libegl-dev libgles-dev libgles2 libegl-mesa0 libegl1 libgl1-mesa-dri
       - run: mise run configure
+      - name: Download Mesa3D (Windows x64 OpenGL)
+        if: ${{ matrix.variant == 'windows-x64-opengl' }}
+        shell: pwsh
+        run: |
+          $headers = @{ Authorization = ('Bearer {0}' -f '${{ secrets.GITHUB_TOKEN }}') }
+          $asset = (Invoke-WebRequest https://api.github.com/repos/pal1000/mesa-dist-win/releases -Headers $headers | ConvertFrom-Json)[0].assets `
+            | Where-Object name -match 'mesa3d-.+-release-msvc\.7z' | Select-Object -First 1
+          Invoke-WebRequest $asset.browser_download_url -OutFile mesa3d.7z
+          $buildDir = "$env:MLN_FFI_BUILD_DIR"
+          New-Item -ItemType Directory -Force -Path $buildDir | Out-Null
+          & 'C:\Program Files\7-Zip\7z.exe' e -o"$buildDir" .\mesa3d.7z x64\opengl32.dll x64\libgallium_wgl.dll x64\libGLESv2.dll
+          Get-ChildItem "$buildDir\opengl32.dll", "$buildDir\libgallium_wgl.dll", "$buildDir\libGLESv2.dll"
+      - name: Download Mesa3D (Windows arm64 OpenGL)
+        if: ${{ matrix.variant == 'windows-arm64-opengl' }}
+        shell: pwsh
+        run: |
+          $headers = @{ Authorization = ('Bearer {0}' -f '${{ secrets.GITHUB_TOKEN }}') }
+          $asset = (Invoke-WebRequest https://api.github.com/repos/mmozeiko/build-mesa/releases -Headers $headers | ConvertFrom-Json)[0].assets `
+            | Where-Object name -match 'mesa-llvmpipe-arm64-.+\.7z' | Select-Object -First 1
+          Invoke-WebRequest $asset.browser_download_url -OutFile mesa3d.7z
+          $buildDir = "$env:MLN_FFI_BUILD_DIR"
+          New-Item -ItemType Directory -Force -Path $buildDir | Out-Null
+          & 'C:\Program Files\7-Zip\7z.exe' e -o"$buildDir" .\mesa3d.7z opengl32.dll libGLESv2.dll
+          Get-ChildItem "$buildDir\opengl32.dll", "$buildDir\libGLESv2.dll"
       - run: mise run ci:lint native
       - name: Run tests (Linux OpenGL — EGL surfaceless + Mesa llvmpipe)
         if: ${{ contains(matrix.variant, 'opengl') && runner.os == 'Linux' }}
@@ -105,8 +132,18 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: "1"
         run: mise run test
       # Windows builds successfully, but native tests are runtime-broken for now.
+      - name: Run tests (Windows OpenGL — Mesa llvmpipe)
+        if: ${{ contains(matrix.variant, 'opengl') && runner.os == 'Windows' }}
+        shell: pwsh
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "true"
+          GALLIUM_DRIVER: llvmpipe
+        run: |
+          $buildDir = "$env:MLN_FFI_BUILD_DIR"
+          $env:PATH = "$buildDir;$env:PATH"
+          mise run test
       - name: Run tests
-        if: ${{ !(contains(matrix.variant, 'opengl') && runner.os == 'Linux') && matrix.variant != 'windows-x64-vulkan' }}
+        if: ${{ !(contains(matrix.variant, 'opengl')) && matrix.variant != 'windows-x64-vulkan' }}
         run: mise run test
       - run: mise run ci:prepare-native-artifact
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -115,10 +152,6 @@ jobs:
           path: ci-artifact
           if-no-files-found: error
           retention-days: 14
-
-  native-windows:
-    name: native / windows
-    uses: ./.github/workflows/native-windows.yml
 
   bindings:
     name: bindings / ${{ matrix.binding }} / ${{ matrix.variant }}
@@ -172,7 +205,6 @@ jobs:
       - docs
       - prepare-matrices
       - native
-      - native-windows
       - bindings
       - examples
     steps:

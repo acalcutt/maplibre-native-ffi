@@ -4,7 +4,7 @@
 
 [workspace]
 channels = ["conda-forge"]
-platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64", "win-64"]
+platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64", "win-64", "win-arm64"]
 
 [system-requirements]
 macos = "14.0"
@@ -43,5 +43,9 @@ vulkan-tools = ">=1.4.341.0,<2"
 moltenvk = ">=1.4.1,<2"
 
 [target.win-64.dependencies]
+cxx-compiler = "*"
+dlfcn-win32 = "*"
+
+[target.win-arm64.dependencies]
 cxx-compiler = "*"
 dlfcn-win32 = "*"
