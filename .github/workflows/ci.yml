@@ -153,6 +153,10 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  native-windows:
+    name: native / windows-arm64-opengl
+    uses: ./.github/workflows/native-windows.yml
+
   bindings:
     name: bindings / ${{ matrix.binding }} / ${{ matrix.variant }}
     runs-on: ${{ matrix.runner }}
@@ -205,6 +209,7 @@ jobs:
       - docs
       - prepare-matrices
       - native
+      - native-windows
       - bindings
       - examples
     steps:
