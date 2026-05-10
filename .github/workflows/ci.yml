@@ -120,17 +120,14 @@ jobs:
           & 'C:\Program Files\7-Zip\7z.exe' e -o"$buildDir" .\mesa3d.7z opengl32.dll libGLESv2.dll
           Get-ChildItem "$buildDir\opengl32.dll", "$buildDir\libGLESv2.dll"
       - run: mise run ci:lint native
-      - name: Run tests (Linux OpenGL — EGL surfaceless + Mesa llvmpipe)
+      - name: Run tests (Linux OpenGL — Xvfb + Mesa llvmpipe)
         if: ${{ contains(matrix.variant, 'opengl') && runner.os == 'Linux' }}
-        # Use EGL_PLATFORM=surfaceless (same approach as maplibre-native's
-        # linux-ci.yml). This tells Mesa's libEGL to create an EGL display
-        # without any windowing system connection (no X11, no Wayland), using
-        # only pbuffer surfaces — which is all the headless backend needs.
-        # LIBGL_ALWAYS_SOFTWARE=1 forces llvmpipe so no GPU is required.
+        # xvfb-run provides a virtual X11 display so Mesa's EGL/GLX can open a
+        # display connection. LIBGL_ALWAYS_SOFTWARE=1 forces the llvmpipe
+        # software rasterizer since CI runners have no GPU.
         env:
-          EGL_PLATFORM: surfaceless
           LIBGL_ALWAYS_SOFTWARE: "1"
-        run: mise run test
+        run: xvfb-run mise run test
       # Windows builds successfully, but native tests are runtime-broken for now.
       - name: Run tests (Windows OpenGL — Mesa llvmpipe)
         if: ${{ contains(matrix.variant, 'opengl') && runner.os == 'Windows' }}

@@ -145,15 +145,18 @@ run = [
 [tasks."ci:prepare-native-artifact"]
 run = [
   "rm -rf ci-artifact",
-  "mkdir -p \"ci-artifact/build/${MLN_FFI_VARIANT:-host}\" ci-artifact/third_party/maplibre-native/vendor/Vulkan-Headers",
+  # MLN_FFI_VARIANT is always set when running under a mise profile.
+  # Avoid bash ${VAR:-default} syntax: Tera misparses {# in ${#arr[@]} as a
+  # comment delimiter, causing template render failures.
+  "mkdir -p \"ci-artifact/build/$MLN_FFI_VARIANT\" ci-artifact/third_party/maplibre-native/vendor/Vulkan-Headers",
   '''
   shopt -s nullglob
   native_libs=("$MLN_FFI_BUILD_DIR"/libmaplibre-native-c.* "$MLN_FFI_BUILD_DIR"/maplibre-native-c.*)
-  if [[ "${#native_libs[@]}" -eq 0 ]]; then
+  if [[ -z "${native_libs[*]}" ]]; then
     echo "missing $MLN_FFI_BUILD_DIR/[lib]maplibre-native-c.*; native artifact was not built" >&2
     exit 1
   fi
-  cp "${native_libs[@]}" "ci-artifact/build/${MLN_FFI_VARIANT:-host}"
+  cp "${native_libs[@]}" "ci-artifact/build/$MLN_FFI_VARIANT"
   ''',
   "if [ \"${MLN_FFI_RENDER_BACKEND:-}\" = \"vulkan\" ]; then cp -R third_party/maplibre-native/vendor/Vulkan-Headers/include ci-artifact/third_party/maplibre-native/vendor/Vulkan-Headers/include; fi",
 ]
