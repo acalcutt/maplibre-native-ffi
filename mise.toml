@@ -89,6 +89,14 @@ run = [
   if [[ -n "$MLN_FFI_ENABLE_CLANG_TIDY" ]]; then
     cmake_args+=(-DMLN_FFI_ENABLE_CLANG_TIDY="$MLN_FFI_ENABLE_CLANG_TIDY")
   fi
+  # sccache intercepts cl.exe but does not support the /Zi flag (which writes
+  # all TUs in a target to a shared .pdb concurrently), causing C1041 errors
+  # in parallel builds. /Z7 embeds debug info in each .obj instead, which is
+  # safe with sccache. CMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded selects
+  # /Z7 for all targets without touching CMakeLists.txt. Requires CMake >= 3.25.
+  if [[ "$CC" == "cl.exe" ]]; then
+    cmake_args+=(-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded)
+  fi
 
   pixi run cmake "${cmake_args[@]}"
   ''',
