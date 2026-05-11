@@ -32,20 +32,22 @@ auto vulkan_loader_library_name() noexcept -> const char* {
 #endif
 }
 
-auto validate_metal_descriptor(const mln_metal_surface_descriptor* descriptor
-) -> mln_status {
+auto validate_metal_descriptor(const mln_metal_surface_descriptor* descriptor)
+  -> mln_status {
   if (descriptor == nullptr) {
     mln::core::set_thread_error("surface descriptor must not be null");
     return MLN_STATUS_INVALID_ARGUMENT;
   }
   if (descriptor->size < sizeof(mln_metal_surface_descriptor)) {
-    mln::core::set_thread_error("mln_metal_surface_descriptor.size is too small"
+    mln::core::set_thread_error(
+      "mln_metal_surface_descriptor.size is too small"
     );
     return MLN_STATUS_INVALID_ARGUMENT;
   }
-  if (descriptor->width == 0 || descriptor->height == 0 ||
-      !std::isfinite(descriptor->scale_factor) ||
-      descriptor->scale_factor <= 0.0) {
+  if (
+    descriptor->width == 0 || descriptor->height == 0 ||
+    !std::isfinite(descriptor->scale_factor) || descriptor->scale_factor <= 0.0
+  ) {
     mln::core::set_thread_error(
       "surface dimensions and scale_factor must be positive"
     );
@@ -58,8 +60,8 @@ auto validate_metal_descriptor(const mln_metal_surface_descriptor* descriptor
   return MLN_STATUS_OK;
 }
 
-auto validate_vulkan_descriptor(const mln_vulkan_surface_descriptor* descriptor
-) -> mln_status {
+auto validate_vulkan_descriptor(const mln_vulkan_surface_descriptor* descriptor)
+  -> mln_status {
   if (descriptor == nullptr) {
     mln::core::set_thread_error("surface descriptor must not be null");
     return MLN_STATUS_INVALID_ARGUMENT;
@@ -70,25 +72,28 @@ auto validate_vulkan_descriptor(const mln_vulkan_surface_descriptor* descriptor
     );
     return MLN_STATUS_INVALID_ARGUMENT;
   }
-  if (descriptor->width == 0 || descriptor->height == 0 ||
-      !std::isfinite(descriptor->scale_factor) ||
-      descriptor->scale_factor <= 0.0) {
+  if (
+    descriptor->width == 0 || descriptor->height == 0 ||
+    !std::isfinite(descriptor->scale_factor) || descriptor->scale_factor <= 0.0
+  ) {
     mln::core::set_thread_error(
       "surface dimensions and scale_factor must be positive"
     );
     return MLN_STATUS_INVALID_ARGUMENT;
   }
-  if (descriptor->instance == nullptr ||
-      descriptor->physical_device == nullptr || descriptor->device == nullptr ||
-      descriptor->graphics_queue == nullptr || descriptor->surface == nullptr) {
+  if (
+    descriptor->instance == nullptr || descriptor->physical_device == nullptr ||
+    descriptor->device == nullptr || descriptor->graphics_queue == nullptr ||
+    descriptor->surface == nullptr
+  ) {
     mln::core::set_thread_error("Vulkan surface handles must not be null");
     return MLN_STATUS_INVALID_ARGUMENT;
   }
   return MLN_STATUS_OK;
 }
 
-auto validate_vulkan_handles(const mln_vulkan_surface_descriptor& descriptor
-) -> mln_status {
+auto validate_vulkan_handles(const mln_vulkan_surface_descriptor& descriptor)
+  -> mln_status {
   auto* const instance = static_cast<VkInstance>(descriptor.instance);
   auto* const physical_device =
     static_cast<VkPhysicalDevice>(descriptor.physical_device);
@@ -121,7 +126,8 @@ auto validate_vulkan_handles(const mln_vulkan_surface_descriptor& descriptor
     }
   }
   if (!found_physical_device) {
-    mln::core::set_thread_error("Vulkan physical_device must belong to instance"
+    mln::core::set_thread_error(
+      "Vulkan physical_device must belong to instance"
     );
     return MLN_STATUS_INVALID_ARGUMENT;
   }
@@ -144,8 +150,10 @@ auto validate_vulkan_handles(const mln_vulkan_surface_descriptor& descriptor
   );
   const auto& queue_family =
     queue_families.at(descriptor.graphics_queue_family_index);
-  if ((queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0 ||
-      queue_family.queueCount == 0) {
+  if (
+    (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0 ||
+    queue_family.queueCount == 0
+  ) {
     mln::core::set_thread_error(
       "Vulkan graphics_queue_family_index must support graphics"
     );
@@ -179,7 +187,8 @@ auto validate_vulkan_handles(const mln_vulkan_surface_descriptor& descriptor
     return MLN_STATUS_NATIVE_ERROR;
   }
   if (surface_format_count == 0) {
-    mln::core::set_thread_error("Vulkan surface must expose at least one format"
+    mln::core::set_thread_error(
+      "Vulkan surface must expose at least one format"
     );
     return MLN_STATUS_INVALID_ARGUMENT;
   }
@@ -336,8 +345,9 @@ class VulkanSurfaceBackend final : public mbgl::vulkan::RendererBackend,
       static_cast<VkPhysicalDevice>(descriptor_.physical_device);
     auto found_physical_device = false;
     for (const auto& candidate : physical_devices) {
-      if (static_cast<VkPhysicalDevice>(candidate) ==
-          requested_physical_device) {
+      if (
+        static_cast<VkPhysicalDevice>(candidate) == requested_physical_device
+      ) {
         physicalDevice = candidate;
         found_physical_device = true;
         break;

@@ -27,9 +27,10 @@ auto validate_owned_descriptor(
     );
     return MLN_STATUS_INVALID_ARGUMENT;
   }
-  if (descriptor->width == 0 || descriptor->height == 0 ||
-      !std::isfinite(descriptor->scale_factor) ||
-      descriptor->scale_factor <= 0.0) {
+  if (
+    descriptor->width == 0 || descriptor->height == 0 ||
+    !std::isfinite(descriptor->scale_factor) || descriptor->scale_factor <= 0.0
+  ) {
     mln::core::set_thread_error(
       "texture dimensions and scale_factor must be positive"
     );
@@ -55,9 +56,10 @@ auto validate_borrowed_descriptor(
     );
     return MLN_STATUS_INVALID_ARGUMENT;
   }
-  if (descriptor->width == 0 || descriptor->height == 0 ||
-      !std::isfinite(descriptor->scale_factor) ||
-      descriptor->scale_factor <= 0.0) {
+  if (
+    descriptor->width == 0 || descriptor->height == 0 ||
+    !std::isfinite(descriptor->scale_factor) || descriptor->scale_factor <= 0.0
+  ) {
     mln::core::set_thread_error(
       "texture dimensions and scale_factor must be positive"
     );
@@ -79,8 +81,10 @@ auto validate_borrowed_descriptor(
     mln::core::physical_dimension(descriptor->width, descriptor->scale_factor);
   const auto physical_height =
     mln::core::physical_dimension(descriptor->height, descriptor->scale_factor);
-  if (metal_texture->width() != physical_width ||
-      metal_texture->height() != physical_height) {
+  if (
+    metal_texture->width() != physical_width ||
+    metal_texture->height() != physical_height
+  ) {
     mln::core::set_thread_error(
       "Metal texture dimensions must match descriptor physical size"
     );
@@ -106,17 +110,19 @@ auto validate_vulkan_owned_descriptor(
     );
     return MLN_STATUS_INVALID_ARGUMENT;
   }
-  if (descriptor->width == 0 || descriptor->height == 0 ||
-      !std::isfinite(descriptor->scale_factor) ||
-      descriptor->scale_factor <= 0.0) {
+  if (
+    descriptor->width == 0 || descriptor->height == 0 ||
+    !std::isfinite(descriptor->scale_factor) || descriptor->scale_factor <= 0.0
+  ) {
     mln::core::set_thread_error(
       "texture dimensions and scale_factor must be positive"
     );
     return MLN_STATUS_INVALID_ARGUMENT;
   }
-  if (descriptor->instance == nullptr ||
-      descriptor->physical_device == nullptr || descriptor->device == nullptr ||
-      descriptor->graphics_queue == nullptr) {
+  if (
+    descriptor->instance == nullptr || descriptor->physical_device == nullptr ||
+    descriptor->device == nullptr || descriptor->graphics_queue == nullptr
+  ) {
     mln::core::set_thread_error("Vulkan handles must not be null");
     return MLN_STATUS_INVALID_ARGUMENT;
   }
@@ -136,18 +142,20 @@ auto validate_vulkan_borrowed_descriptor(
     );
     return MLN_STATUS_INVALID_ARGUMENT;
   }
-  if (descriptor->width == 0 || descriptor->height == 0 ||
-      !std::isfinite(descriptor->scale_factor) ||
-      descriptor->scale_factor <= 0.0) {
+  if (
+    descriptor->width == 0 || descriptor->height == 0 ||
+    !std::isfinite(descriptor->scale_factor) || descriptor->scale_factor <= 0.0
+  ) {
     mln::core::set_thread_error(
       "texture dimensions and scale_factor must be positive"
     );
     return MLN_STATUS_INVALID_ARGUMENT;
   }
-  if (descriptor->instance == nullptr ||
-      descriptor->physical_device == nullptr || descriptor->device == nullptr ||
-      descriptor->graphics_queue == nullptr || descriptor->image == nullptr ||
-      descriptor->image_view == nullptr) {
+  if (
+    descriptor->instance == nullptr || descriptor->physical_device == nullptr ||
+    descriptor->device == nullptr || descriptor->graphics_queue == nullptr ||
+    descriptor->image == nullptr || descriptor->image_view == nullptr
+  ) {
     mln::core::set_thread_error("Vulkan handles must not be null");
     return MLN_STATUS_INVALID_ARGUMENT;
   }
@@ -348,8 +356,10 @@ auto metal_owned_texture_acquire_frame(
   if (status != MLN_STATUS_OK) {
     return status;
   }
-  if (out_frame == nullptr ||
-      out_frame->size < sizeof(mln_metal_owned_texture_frame)) {
+  if (
+    out_frame == nullptr ||
+    out_frame->size < sizeof(mln_metal_owned_texture_frame)
+  ) {
     set_thread_error("out_frame must not be null and must have a valid size");
     return MLN_STATUS_INVALID_ARGUMENT;
   }
@@ -361,8 +371,10 @@ auto metal_owned_texture_acquire_frame(
     set_thread_error("no rendered frame is available for this generation");
     return MLN_STATUS_INVALID_STATE;
   }
-  if (texture->texture.mode != TextureSessionMode::Owned ||
-      texture->texture.api_kind != TextureSessionApi::Metal) {
+  if (
+    texture->texture.mode != TextureSessionMode::Owned ||
+    texture->texture.api_kind != TextureSessionApi::Metal
+  ) {
     set_thread_error("texture session cannot expose a Metal texture frame");
     return MLN_STATUS_UNSUPPORTED;
   }
@@ -391,8 +403,10 @@ auto metal_owned_texture_release_frame(
     set_thread_error("frame must not be null and must have a valid size");
     return MLN_STATUS_INVALID_ARGUMENT;
   }
-  if (!texture->texture.acquired || texture->texture.acquired_frame_kind !=
-                                      TextureSessionFrameKind::MetalOwned) {
+  if (
+    !texture->texture.acquired ||
+    texture->texture.acquired_frame_kind != TextureSessionFrameKind::MetalOwned
+  ) {
     set_thread_error("no texture frame is currently acquired");
     return MLN_STATUS_INVALID_STATE;
   }
@@ -514,8 +528,10 @@ auto vulkan_owned_texture_acquire_frame(
   if (status != MLN_STATUS_OK) {
     return status;
   }
-  if (out_frame == nullptr ||
-      out_frame->size < sizeof(mln_vulkan_owned_texture_frame)) {
+  if (
+    out_frame == nullptr ||
+    out_frame->size < sizeof(mln_vulkan_owned_texture_frame)
+  ) {
     set_thread_error("out_frame must not be null and must have a valid size");
     return MLN_STATUS_INVALID_ARGUMENT;
   }
@@ -530,8 +546,9 @@ auto vulkan_owned_texture_release_frame(
   if (status != MLN_STATUS_OK) {
     return status;
   }
-  if (frame == nullptr ||
-      frame->size < sizeof(mln_vulkan_owned_texture_frame)) {
+  if (
+    frame == nullptr || frame->size < sizeof(mln_vulkan_owned_texture_frame)
+  ) {
     set_thread_error("frame must not be null and must have a valid size");
     return MLN_STATUS_INVALID_ARGUMENT;
   }

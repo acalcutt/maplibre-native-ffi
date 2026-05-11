@@ -26,20 +26,22 @@
 
 namespace {
 
-auto validate_descriptor(const mln_metal_surface_descriptor* descriptor
-) -> mln_status {
+auto validate_descriptor(const mln_metal_surface_descriptor* descriptor)
+  -> mln_status {
   if (descriptor == nullptr) {
     mln::core::set_thread_error("surface descriptor must not be null");
     return MLN_STATUS_INVALID_ARGUMENT;
   }
   if (descriptor->size < sizeof(mln_metal_surface_descriptor)) {
-    mln::core::set_thread_error("mln_metal_surface_descriptor.size is too small"
+    mln::core::set_thread_error(
+      "mln_metal_surface_descriptor.size is too small"
     );
     return MLN_STATUS_INVALID_ARGUMENT;
   }
-  if (descriptor->width == 0 || descriptor->height == 0 ||
-      !std::isfinite(descriptor->scale_factor) ||
-      descriptor->scale_factor <= 0.0) {
+  if (
+    descriptor->width == 0 || descriptor->height == 0 ||
+    !std::isfinite(descriptor->scale_factor) || descriptor->scale_factor <= 0.0
+  ) {
     mln::core::set_thread_error(
       "surface dimensions and scale_factor must be positive"
     );
@@ -267,8 +269,8 @@ class MetalSurfaceSessionBackend final
   MetalSurfaceBackend backend_;
 };
 
-auto validate_vulkan_descriptor(const mln_vulkan_surface_descriptor* descriptor
-) -> mln_status {
+auto validate_vulkan_descriptor(const mln_vulkan_surface_descriptor* descriptor)
+  -> mln_status {
   if (descriptor == nullptr) {
     mln::core::set_thread_error("surface descriptor must not be null");
     return MLN_STATUS_INVALID_ARGUMENT;
@@ -279,17 +281,20 @@ auto validate_vulkan_descriptor(const mln_vulkan_surface_descriptor* descriptor
     );
     return MLN_STATUS_INVALID_ARGUMENT;
   }
-  if (descriptor->width == 0 || descriptor->height == 0 ||
-      !std::isfinite(descriptor->scale_factor) ||
-      descriptor->scale_factor <= 0.0) {
+  if (
+    descriptor->width == 0 || descriptor->height == 0 ||
+    !std::isfinite(descriptor->scale_factor) || descriptor->scale_factor <= 0.0
+  ) {
     mln::core::set_thread_error(
       "surface dimensions and scale_factor must be positive"
     );
     return MLN_STATUS_INVALID_ARGUMENT;
   }
-  if (descriptor->instance == nullptr ||
-      descriptor->physical_device == nullptr || descriptor->device == nullptr ||
-      descriptor->graphics_queue == nullptr || descriptor->surface == nullptr) {
+  if (
+    descriptor->instance == nullptr || descriptor->physical_device == nullptr ||
+    descriptor->device == nullptr || descriptor->graphics_queue == nullptr ||
+    descriptor->surface == nullptr
+  ) {
     mln::core::set_thread_error("Vulkan surface handles must not be null");
     return MLN_STATUS_INVALID_ARGUMENT;
   }
