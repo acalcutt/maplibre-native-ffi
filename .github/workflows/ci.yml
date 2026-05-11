@@ -146,7 +146,15 @@ jobs:
       - name: Install EGL/GLES2 runtime libraries (Linux OpenGL only)
         if: ${{ contains(matrix.variant, 'opengl') && runner.os == 'Linux' }}
         run: sudo apt-get update -y && sudo apt-get install -y --no-install-recommends libgles2 libegl-mesa0 libegl1 libgl1-mesa-dri
-      - run: mise run "${{ matrix.task }}"
+      - name: Run binding task
+        env:
+          # For OpenGL on Linux: direct EGL to the surfaceless platform and
+          # force Mesa llvmpipe so tests can render without a display server.
+          # These are no-ops for non-OpenGL backends (empty value is ignored).
+          EGL_PLATFORM: ${{ contains(matrix.variant, 'opengl') && runner.os == 'Linux' && 'surfaceless' || '' }}
+          LIBGL_ALWAYS_SOFTWARE: ${{ contains(matrix.variant, 'opengl') && runner.os == 'Linux' && '1' || '' }}
+          GALLIUM_DRIVER: ${{ contains(matrix.variant, 'opengl') && runner.os == 'Linux' && 'llvmpipe' || '' }}
+        run: mise run "${{ matrix.task }}"
 
   examples:
     name: examples / ${{ matrix.example }} / ${{ matrix.variant }}
