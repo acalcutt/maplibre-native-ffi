@@ -33,6 +33,10 @@ function(mln_configure_opengl_backend target)
     # for the WGL (Windows OpenGL) path.
     list(APPEND MLN_FFI_VENDOR_OPENGL_SOURCES
          ${MLN_SOURCE_DIR}/platform/windows/src/headless_backend_wgl.cpp)
+    # gl_functions_wgl.h includes <GLES3/gl3.h> which is not present in the
+    # Windows SDK or the pixi conda-forge toolchain environment. Vendor the
+    # Khronos OpenGL ES 3 headers (MIT-licensed) so the build is self-contained.
+    set(MLN_WIN_GLES_HEADERS_DIR ${PROJECT_SOURCE_DIR}/third_party/gles3-headers)
   elseif(ANDROID OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(MLN_FFI_OPENGL_SOURCES
         ${PROJECT_SOURCE_DIR}/src/render/opengl/egl_surface_session.cpp)
@@ -150,6 +154,14 @@ function(mln_configure_opengl_backend target)
       ${target}
       SYSTEM
       PRIVATE ${MLN_LINUX_EGL_INCLUDE_DIR})
+  endif()
+
+  # Windows WGL: vendor Khronos GLES3 headers (needed by gl_functions_wgl.h).
+  if(MLN_WIN_GLES_HEADERS_DIR)
+    target_include_directories(
+      ${target}
+      SYSTEM
+      PRIVATE ${MLN_WIN_GLES_HEADERS_DIR})
   endif()
 
   # MapLibre Native GL backend compile flags
