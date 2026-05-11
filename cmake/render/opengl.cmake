@@ -69,7 +69,7 @@ function(mln_configure_opengl_backend target)
         MLN_GLESv2_LIBRARY
         NAMES GLESv2
         HINTS
-          $ENV{CONDA_PREFIX}/lib /usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}
+          /usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}
           /usr/lib/x86_64-linux-gnu /usr/lib/aarch64-linux-gnu /usr/lib
           NO_CMAKE_FIND_ROOT_PATH
         REQUIRED)

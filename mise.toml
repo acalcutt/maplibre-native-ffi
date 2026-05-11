@@ -137,6 +137,9 @@ arg "<profile>" help="Lint profile" {
 '''
 run = [
   "hk fix --all --profile \"ci-${usage_profile?}\"",
+  # hk fix may normalize line endings inside submodule working trees on
+  # Windows; reset any submodule changes so they don't appear in git diff.
+  "git submodule foreach --quiet git checkout -- .",
   "git update-index -q --refresh",
   "git diff --exit-code",
   "git diff --cached --exit-code",
