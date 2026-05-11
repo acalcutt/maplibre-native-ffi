@@ -59,7 +59,7 @@ function(mln_configure_windows_platform target)
   # errors. Suppress the ones we cannot fix (they are in vendor code):
   #   C4324 - structure padded due to alignment specifier (gpu_expression.hpp)
   #   C4244 - narrowing int->char16_t conversion (glyph.hpp)
-  #   C4702 - unreachable code (vendor/expected-lite/include/nonstd/expected.hpp)
+  # C4702 - unreachable code (vendor/expected-lite/include/nonstd/expected.hpp)
   target_compile_options(${target} PRIVATE /wd4324 /wd4244 /wd4702)
 
   # LNK4044: LLVM cmake exports contain '-lpthread' in INTERFACE_LINK_LIBRARIES

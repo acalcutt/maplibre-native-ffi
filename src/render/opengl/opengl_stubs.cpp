@@ -10,12 +10,15 @@
 // paths (e.g. null out_session → INVALID_ARGUMENT, not UNSUPPORTED).
 //
 // EGL / WGL symmetry:
-//   Linux (EGL):   egl_surface_session.cpp provides the real egl_surface_attach.
+//   Linux (EGL):   egl_surface_session.cpp provides the real
+//   egl_surface_attach.
 //                  This file provides stubs for metal_surface_attach,
-//                  vulkan_surface_attach, and all Metal/Vulkan texture functions.
-//   Windows (WGL): wgl_surface_session.cpp provides the real wgl_surface_attach.
-//                  This file additionally provides a stub for egl_surface_attach
-//                  (guarded by _WIN32).
+//                  vulkan_surface_attach, and all Metal/Vulkan texture
+//                  functions.
+//   Windows (WGL): wgl_surface_session.cpp provides the real
+//   wgl_surface_attach.
+//                  This file additionally provides a stub for
+//                  egl_surface_attach (guarded by _WIN32).
 
 #include <cmath>
 
@@ -85,8 +88,7 @@ auto validate_vulkan_surface_descriptor(
     return MLN_STATUS_INVALID_ARGUMENT;
   }
   if (
-    descriptor->instance == nullptr ||
-    descriptor->physical_device == nullptr ||
+    descriptor->instance == nullptr || descriptor->physical_device == nullptr ||
     descriptor->device == nullptr || descriptor->graphics_queue == nullptr ||
     descriptor->surface == nullptr
   ) {
@@ -96,7 +98,8 @@ auto validate_vulkan_surface_descriptor(
   return MLN_STATUS_OK;
 }
 
-// ── Texture descriptor validation ─────────────────────────────────────────────
+// ── Texture descriptor validation
+// ─────────────────────────────────────────────
 
 auto validate_metal_owned_tex(
   const mln_metal_owned_texture_descriptor* descriptor
@@ -179,8 +182,7 @@ auto validate_vulkan_owned_tex(
     return MLN_STATUS_INVALID_ARGUMENT;
   }
   if (
-    descriptor->instance == nullptr ||
-    descriptor->physical_device == nullptr ||
+    descriptor->instance == nullptr || descriptor->physical_device == nullptr ||
     descriptor->device == nullptr || descriptor->graphics_queue == nullptr
   ) {
     mln::core::set_thread_error("Vulkan handles must not be null");
@@ -212,8 +214,7 @@ auto validate_vulkan_borrowed_tex(
     return MLN_STATUS_INVALID_ARGUMENT;
   }
   if (
-    descriptor->instance == nullptr ||
-    descriptor->physical_device == nullptr ||
+    descriptor->instance == nullptr || descriptor->physical_device == nullptr ||
     descriptor->device == nullptr || descriptor->graphics_queue == nullptr ||
     descriptor->image == nullptr || descriptor->image_view == nullptr
   ) {
@@ -227,7 +228,8 @@ auto validate_vulkan_borrowed_tex(
 
 namespace mln::core {
 
-// ── Surface stubs ─────────────────────────────────────────────────────────────
+// ── Surface stubs
+// ─────────────────────────────────────────────────────────────
 
 auto metal_surface_attach(
   mln_map* map, const mln_metal_surface_descriptor* descriptor,
@@ -319,7 +321,8 @@ auto egl_surface_attach(
 }
 #endif  // _WIN32
 
-// ── Texture stubs ─────────────────────────────────────────────────────────────
+// ── Texture stubs
+// ─────────────────────────────────────────────────────────────
 
 auto metal_owned_texture_descriptor_default() noexcept
   -> mln_metal_owned_texture_descriptor {
@@ -360,9 +363,9 @@ auto vulkan_owned_texture_descriptor_default() noexcept
 
 auto vulkan_borrowed_texture_descriptor_default() noexcept
   -> mln_vulkan_borrowed_texture_descriptor {
-  // Integer literals for Vulkan enum fields (no Vulkan headers in OpenGL build).
-  // format=0 → VK_FORMAT_UNDEFINED, initial_layout=0 → VK_IMAGE_LAYOUT_UNDEFINED
-  // final_layout=0 → VK_IMAGE_LAYOUT_UNDEFINED
+  // Integer literals for Vulkan enum fields (no Vulkan headers in OpenGL
+  // build). format=0 → VK_FORMAT_UNDEFINED, initial_layout=0 →
+  // VK_IMAGE_LAYOUT_UNDEFINED final_layout=0 → VK_IMAGE_LAYOUT_UNDEFINED
   return mln_vulkan_borrowed_texture_descriptor{
     .size = sizeof(mln_vulkan_borrowed_texture_descriptor),
     .width = 256,

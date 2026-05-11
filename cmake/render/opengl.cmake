@@ -75,12 +75,14 @@ function(mln_configure_opengl_backend target)
       # gl_functions.cpp defines mbgl::platform::gl* function-pointer variables
       # (e.g. mbgl::platform::glGetFloatv) that bridge mbgl's internal GL calls
       # to the GLES3 implementation at link time.
-      # headless_backend_egl.cpp provides mbgl::gl::HeadlessBackend::createImpl()
+      # headless_backend_egl.cpp provides
+      # mbgl::gl::HeadlessBackend::createImpl()
       # for the Linux EGL path. Without it the linker fails with an undefined
       # reference to that pure-virtual override at runtime.
-      list(APPEND MLN_FFI_VENDOR_OPENGL_SOURCES
-           ${MLN_SOURCE_DIR}/platform/linux/src/gl_functions.cpp
-           ${MLN_SOURCE_DIR}/platform/linux/src/headless_backend_egl.cpp)
+      list(
+        APPEND MLN_FFI_VENDOR_OPENGL_SOURCES
+        ${MLN_SOURCE_DIR}/platform/linux/src/gl_functions.cpp
+        ${MLN_SOURCE_DIR}/platform/linux/src/headless_backend_egl.cpp)
       set(MLN_FFI_OPENGL_LIBS ${MLN_EGL_LIBRARY} ${MLN_GLESv2_LIBRARY})
     endif()
     if(NOT ANDROID)
