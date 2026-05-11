@@ -91,6 +91,14 @@ jobs:
         # libgl1-mesa-dri   — Mesa DRI drivers including swrast/llvmpipe CPU
         #                     rasterizer (often pre-installed; listed for clarity).
         run: sudo apt-get update -y && sudo apt-get install -y --no-install-recommends libegl-dev libgles-dev libgles2 libegl-mesa0 libegl1 libgl1-mesa-dri
+      - name: Set up MSVC (Windows only)
+        if: ${{ runner.os == 'Windows' }}
+        # pixi's cxx-compiler package was removed to avoid its vs2022_compiler_vars.bat
+        # activation exceeding CMD.exe's 8191-char PATH limit on GitHub runners.
+        # ilammy/msvc-dev-cmd runs vcvarsall.bat once and exports MSVC env vars
+        # into the GitHub Actions environment file (GITHUB_ENV), which avoids
+        # the BAT-level PATH length limit and persists across all subsequent steps.
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
       - run: mise run configure
       - name: Download Mesa3D (Windows x64 OpenGL)
         if: ${{ matrix.variant == 'windows-x64-opengl' }}

@@ -45,16 +45,18 @@ function(mln_configure_opengl_backend target)
       # multiarch lib dir, so bare -lEGL / -lGLESv2 fails. Use find_library
       # with explicit hints and NO_CMAKE_FIND_ROOT_PATH.
       #
-      # Prefer pixi's conda-forge mesalib libEGL/libGLESv2 over system libs.
-      # At runtime DT_RUNPATH=.pixi/envs/default/lib causes pixi's libEGL to
-      # be loaded. We use EGL_PLATFORM=surfaceless + LIBGL_ALWAYS_SOFTWARE=1
-      # in CI so pixi's Mesa creates a surfaceless pbuffer display without
-      # needing X11 or a GPU — exactly what the headless backend requires.
+      # Use the system GLVND libEGL dispatcher (from libegl-dev) rather than
+      # pixi's conda-forge mesalib libEGL. The GLVND dispatcher locates Mesa
+      # ICDs via /usr/share/glvnd/egl_vendor.d/ at runtime (installed by
+      # libegl-mesa0), which supports EGL_PLATFORM=surfaceless + software
+      # llvmpipe rendering without a GPU or X11 display.
+      # Pixi's mesalib libEGL is a standalone Mesa EGL without GLVND dispatch
+      # and may lack platform extensions needed for headless CI rendering.
       find_library(
         MLN_EGL_LIBRARY
         NAMES EGL
         HINTS
-          $ENV{CONDA_PREFIX}/lib /usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}
+          /usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}
           /usr/lib/x86_64-linux-gnu /usr/lib/aarch64-linux-gnu /usr/lib
           NO_CMAKE_FIND_ROOT_PATH
         REQUIRED)
