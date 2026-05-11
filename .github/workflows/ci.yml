@@ -67,9 +67,6 @@ jobs:
             .git/modules/third_party/maplibre-native
           key: mln-src-v2-${{ hashFiles('.gitmodules', 'cmake/mln_version.cmake') }}
       - uses: ./.github/actions/setup-ci-deps
-      - name: Set up MSVC developer tools (Windows only)
-        if: ${{ runner.os == 'Windows' }}
-        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
       - name: Install EGL/GLES2 dev libraries (Linux OpenGL only)
         if: ${{ contains(matrix.variant, 'opengl') && runner.os == 'Linux' }}
         # libegl-dev    — provides /usr/lib/.../libEGL.so (unversioned symlink)

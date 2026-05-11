@@ -88,14 +88,11 @@ fn addCTests(b: *std.Build, options: BuildOptions) *std.Build.Step.Compile {
                 c_tests.root_module.linkSystemLibrary("OpenGL32", .{});
             },
             else => {
-                // EGL is needed for the test binary to link against libmaplibre-native-c.so.
-                // Add pixi's lib dir to the rpath so the same libEGL.so that
-                // libmaplibre-native-c.so uses is also loaded by the test binary —
-                // having two different libEGL instances (pixi vs system GLVND) in the
-                // same process splits EGL state and causes eglMakeCurrent to fail.
-                c_tests.root_module.addLibraryPath(pixiLibraryDir(b, options.target));
-                c_tests.root_module.addRPath(pixiLibraryDir(b, options.target));
-                c_tests.root_module.linkSystemLibrary("EGL", .{});
+                // The test binary does not call EGL directly; all GL/EGL calls
+                // go through libmaplibre-native-c.so which carries its own
+                // RUNPATH to pixi's libEGL.so. Linking -lEGL here would pull
+                // in the system GLVND dispatcher as a second EGL instance,
+                // splitting EGL state and causing eglMakeCurrent to fail.
             },
         }
     }
