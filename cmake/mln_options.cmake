@@ -32,11 +32,7 @@ function(mln_configure_options)
       FATAL_ERROR
         "OpenGL backend is not supported on Apple platforms; use metal")
   endif()
-  if(MLN_FFI_RENDER_BACKEND STREQUAL "opengl" AND WIN32)
-    message(
-      FATAL_ERROR
-        "OpenGL/WGL backend is not yet supported on Windows in this build; use vulkan")
-  endif()
+
   set(MLN_WITH_METAL OFF CACHE BOOL "Build MapLibre Native Metal backend" FORCE)
   set(MLN_WITH_VULKAN OFF
       CACHE BOOL "Build MapLibre Native Vulkan backend" FORCE)

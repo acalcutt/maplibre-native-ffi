@@ -62,12 +62,40 @@ jobs:
         # libgles-dev (not libgles2-mesa-dev): avoids a hard libpng-dev
         # dependency that conflicts with pixi's managed libpng headers.
         run: sudo apt-get update -y && sudo apt-get install -y --no-install-recommends libegl-dev libgles-dev libgles2 libegl-mesa0 libegl1 libgl1-mesa-dri
+      - name: Set up MSVC (Windows only)
+        if: ${{ runner.os == 'Windows' }}
+        # pixi's cxx-compiler activates vs2022_compiler_vars.bat which can exceed
+        # CMD.exe's 8191-char PATH limit on GitHub runners. ilammy/msvc-dev-cmd
+        # runs vcvarsall.bat once and exports MSVC env vars directly, avoiding
+        # the PATH limit and persisting across all subsequent steps.
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+      - name: Download Mesa3D (Windows x64 OpenGL)
+        if: ${{ inputs.variant == 'windows-x64-opengl' }}
+        shell: pwsh
+        run: |
+          $headers = @{ Authorization = ('Bearer {0}' -f '${{ secrets.GITHUB_TOKEN }}') }
+          $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/pal1000/mesa-dist-win/releases/latest' -Headers $headers
+          $asset = $release.assets | Where-Object { $_.name -like 'mesa3d-*-release-msvc.7z' } | Select-Object -First 1
+          Invoke-WebRequest $asset.browser_download_url -OutFile mesa3d.7z
+          $buildDir = "$env:MLN_FFI_BUILD_DIR"
+          New-Item -ItemType Directory -Force -Path $buildDir | Out-Null
+          & 'C:\Program Files\7-Zip\7z.exe' e -o"$buildDir" .\mesa3d.7z x64\opengl32.dll x64\libgallium_wgl.dll x64\libGLESv2.dll
+          Get-ChildItem "$buildDir\opengl32.dll", "$buildDir\libgallium_wgl.dll", "$buildDir\libGLESv2.dll"
       - run: mise run configure
       # Windows builds successfully, but native tests/examples are runtime-broken for now.
       - if: ${{ inputs.variant == 'windows-x64-vulkan' }}
         run: mise run build
+      - name: Run tests (Windows OpenGL — Mesa llvmpipe)
+        if: ${{ inputs.variant == 'windows-x64-opengl' }}
+        shell: pwsh
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "true"
+        run: |
+          $buildDir = "$env:MLN_FFI_BUILD_DIR"
+          $env:PATH = "$buildDir;$env:PATH"
+          mise run test
       - name: Run tests
-        if: ${{ inputs.variant != 'windows-x64-vulkan' }}
+        if: ${{ inputs.variant != 'windows-x64-vulkan' && inputs.variant != 'windows-x64-opengl' }}
         env:
           # For OpenGL on Linux: direct EGL to the surfaceless platform and
           # force Mesa llvmpipe so tests can render without a display server.
