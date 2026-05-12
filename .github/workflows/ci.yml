@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, ci-test/linux-x64-opengl]
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -73,38 +73,13 @@ jobs:
       - uses: ./.github/actions/setup-ci-deps
       - name: Install EGL/GLES2 dev libraries (Linux OpenGL only)
         if: ${{ contains(matrix.variant, 'opengl') && runner.os == 'Linux' }}
-        # libegl-dev    — provides /usr/lib/.../libEGL.so (unversioned symlink)
-        # libgles-dev   — Ubuntu 24.04 name (was libgles2-dev); depends on
-        #                 libglvnd-dev which provides /usr/include/GLES3/*.h
-        #                 without a libpng-dev dependency.
-        # libgles2      — runtime library, provides libGLESv2.so.2.
-        # libgles2-mesa-dev is intentionally omitted: it has a hard Depends:
-        # libpng-dev which installs libpng headers newer than pixi's libpng.so,
-        # causing a header/ABI mismatch. The cmake find_library call extends
-        # CMAKE_FIND_LIBRARY_SUFFIXES to also match .so.2 so the versioned
-        # runtime file is accepted for linking.
-        # libegl-mesa0      — Mesa's EGL ICD: installs 50_mesa.json into
-        #                     /usr/share/glvnd/egl_vendor.d/ and provides
-        #                     libEGL_mesa.so.0 (compiled WITH X11 platform
-        #                     support). The system GLVND dispatcher (libEGL.so.1)
-        #                     loads this ICD when asked for EGL_DEFAULT_DISPLAY.
-        # libegl1           — GLVND EGL dispatcher (libEGL.so.1). Already
-        #                     present on Ubuntu 24.04 but listed for clarity.
-        # xvfb              — Provides Xvfb/xvfb-run so the test process has a
-        #                     virtual X11 display to give to eglGetDisplay().
-        # libgl1-mesa-dri   — Mesa DRI drivers including swrast/llvmpipe CPU
-        #                     rasterizer (often pre-installed; listed for clarity).
+        # libgles2-mesa-dev is intentionally omitted: it pulls in libpng-dev
+        # which conflicts with pixi's libpng.so headers at configure time.
         run: sudo apt-get update -y && sudo apt-get install -y --no-install-recommends libegl-dev libgles-dev libgles2 libegl-mesa0 libegl1 libgl1-mesa-dri
       - run: mise run configure
       - run: mise run ci:lint native
       - name: Run tests (Linux OpenGL — Xvfb + Mesa llvmpipe)
         if: ${{ contains(matrix.variant, 'opengl') && runner.os == 'Linux' }}
-        # xvfb-run provides a virtual X11 display for any code that opens
-        # a display connection, but we direct Mesa's EGL to the surfaceless
-        # platform explicitly so it does not need X11 internals.
-        # EGL_PLATFORM=surfaceless — use EGL surfaceless platform (pbuffer only)
-        # LIBGL_ALWAYS_SOFTWARE=1  — force llvmpipe software rasterizer
-        # GALLIUM_DRIVER=llvmpipe  — select llvmpipe inside Mesa explicitly
         env:
           EGL_PLATFORM: surfaceless
           LIBGL_ALWAYS_SOFTWARE: "1"
