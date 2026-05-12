@@ -1,14 +1,16 @@
 # cmake/render/opengl.cmake
-# Configures the OpenGL render backend (EGL on Linux).
+# Configures the OpenGL render backend (EGL on Linux, WGL on Windows).
 #
 # Source files:
 #   - egl_surface_session.cpp   (Linux via EGL)
+#   - wgl_surface_session.cpp   (Windows via WGL)
 #
-# The GL header-only backend plumbing from MapLibre Native is shared
-# (headless_backend.cpp).
+# Only one platform file is compiled per build. The GL header-only backend
+# plumbing from MapLibre Native is shared (headless_backend.cpp).
 #
 # Link requirements:
-#   - Linux: system GLVND libEGL + libGLESv2 (from libegl-dev / libgles-dev).
+#   - Linux:   system GLVND libEGL + libGLESv2 (from libegl-dev / libgles-dev).
+#   - Windows: OpenGL32 is always present; no find_package needed.
 
 function(mln_configure_opengl_backend target)
   set(MLN_FFI_VENDOR_OPENGL_SOURCES
@@ -22,7 +24,19 @@ function(mln_configure_opengl_backend target)
       # references, regardless of which GPU backend was selected at build time.
       ${PROJECT_SOURCE_DIR}/src/render/opengl/opengl_stubs.cpp)
 
-  if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  if(WIN32)
+    set(MLN_FFI_OPENGL_SOURCES
+        ${PROJECT_SOURCE_DIR}/src/render/opengl/wgl_surface_session.cpp)
+    set(MLN_FFI_OPENGL_LIBS OpenGL32)
+    # headless_backend_wgl.cpp provides mbgl::gl::HeadlessBackend::createImpl()
+    # for the WGL (Windows OpenGL) path.
+    list(APPEND MLN_FFI_VENDOR_OPENGL_SOURCES
+         ${MLN_SOURCE_DIR}/platform/windows/src/headless_backend_wgl.cpp)
+    # gl_functions_wgl.h includes <GLES3/gl3.h> which is not present in the
+    # Windows SDK or the pixi conda-forge toolchain environment. Vendor the
+    # Khronos OpenGL ES 3 headers (MIT-licensed) so the build is self-contained.
+    set(MLN_WIN_GLES_HEADERS_DIR ${PROJECT_SOURCE_DIR}/third_party/gles3-headers)
+  elseif(WIN32)
     set(MLN_FFI_OPENGL_SOURCES
         ${PROJECT_SOURCE_DIR}/src/render/opengl/egl_surface_session.cpp)
     # On Linux the conda/pixi toolchain's ld does not search the distro
@@ -105,7 +119,7 @@ function(mln_configure_opengl_backend target)
     message(
       FATAL_ERROR
         "OpenGL backend: unsupported platform '${CMAKE_SYSTEM_NAME}'. "
-        "Supported platform is Linux (EGL).")
+        "Supported platforms are Windows (WGL) and Linux (EGL).")
   endif()
 
   # headless_backend.cpp (from maplibre-native) includes <unique_resource.hpp>.
@@ -128,6 +142,14 @@ function(mln_configure_opengl_backend target)
       ${target}
       SYSTEM
       PRIVATE ${MLN_LINUX_EGL_INCLUDE_DIR})
+  endif()
+
+  # Windows WGL: vendor Khronos GLES3 headers (needed by gl_functions_wgl.h).
+  if(MLN_WIN_GLES_HEADERS_DIR)
+    target_include_directories(
+      ${target}
+      SYSTEM
+      PRIVATE ${MLN_WIN_GLES_HEADERS_DIR})
   endif()
 
   # MapLibre Native GL backend compile flags
