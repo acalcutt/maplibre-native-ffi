@@ -79,8 +79,14 @@ jobs:
           Invoke-WebRequest $asset.browser_download_url -OutFile mesa3d.7z
           $buildDir = "$env:MLN_FFI_BUILD_DIR"
           New-Item -ItemType Directory -Force -Path $buildDir | Out-Null
-          & 'C:\Program Files\7-Zip\7z.exe' e -o"$buildDir" .\mesa3d.7z x64\opengl32.dll x64\libgallium_wgl.dll x64\libGLESv2.dll
-          Get-ChildItem "$buildDir\opengl32.dll", "$buildDir\libgallium_wgl.dll", "$buildDir\libGLESv2.dll"
+          & 'C:\Program Files\7-Zip\7z.exe' e -o"$buildDir" .\mesa3d.7z x64\libgallium_wgl.dll x64\libGLESv2.dll
+          Get-ChildItem "$buildDir\libgallium_wgl.dll", "$buildDir\libGLESv2.dll"
+          # Register libgallium_wgl as the OpenGL ICD so system opengl32.dll dispatches to it
+          $dllPath = "$buildDir\libgallium_wgl.dll"
+          reg add 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL' /v DLL /t REG_SZ /d $dllPath /f
+          reg add 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL' /v DriverVersion /t REG_DWORD /d 1 /f
+          reg add 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL' /v Flags /t REG_DWORD /d 1 /f
+          reg add 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL' /v Version /t REG_DWORD /d 2 /f
       - run: mise run configure
       # Windows builds successfully, but native tests/examples are runtime-broken for now.
       - if: ${{ inputs.variant == 'windows-x64-vulkan' }}
@@ -90,6 +96,8 @@ jobs:
         shell: pwsh
         env:
           LIBGL_ALWAYS_SOFTWARE: "true"
+          GALLIUM_DRIVER: llvmpipe
+          ANGLE_DEFAULT_PLATFORM: gl
         run: |
           $buildDir = "$env:MLN_FFI_BUILD_DIR"
           $env:PATH = "$buildDir;$env:PATH"
