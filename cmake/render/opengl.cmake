@@ -36,7 +36,7 @@ function(mln_configure_opengl_backend target)
     # Windows SDK or the pixi conda-forge toolchain environment. Vendor the
     # Khronos OpenGL ES 3 headers (MIT-licensed) so the build is self-contained.
     set(MLN_WIN_GLES_HEADERS_DIR ${PROJECT_SOURCE_DIR}/third_party/gles3-headers)
-  elseif(WIN32)
+  elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(MLN_FFI_OPENGL_SOURCES
         ${PROJECT_SOURCE_DIR}/src/render/opengl/egl_surface_session.cpp)
     # On Linux the conda/pixi toolchain's ld does not search the distro
