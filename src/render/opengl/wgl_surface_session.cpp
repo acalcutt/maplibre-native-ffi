@@ -162,7 +162,10 @@ class WGLSurfaceSessionBackend final : public mln::core::SurfaceSessionBackend {
     backend_.setSize(mbgl::Size{physical_width, physical_height});
   }
 
-  void swap_buffers() { backend_.swapBuffers(); }
+  auto swap_buffers() -> mln_status override {
+    backend_.swapBuffers();
+    return MLN_STATUS_OK;
+  }
 
  private:
   WGLSurfaceBackendImpl backend_;
