@@ -102,7 +102,10 @@ jobs:
           Invoke-WebRequest $asset.browser_download_url -OutFile mesa3d.7z
           $buildDir = "$env:MLN_FFI_BUILD_DIR"
           New-Item -ItemType Directory -Force -Path $buildDir | Out-Null
-          & 'C:\Program Files\7-Zip\7z.exe' e -o"$buildDir" .\mesa3d.7z x64\libgallium_wgl.dll x64\libGLESv2.dll
+          # Extract all x64 DLLs so every transitive dependency of libgallium_wgl.dll
+          # (e.g. dxil.dll, libglapi.dll, sp-lossless.dll …) is satisfied. Missing deps
+          # cause blocking "DLL not found" dialogs on Windows that hang CI indefinitely.
+          & 'C:\Program Files\7-Zip\7z.exe' e -o"$buildDir" .\mesa3d.7z -ir'!x64\*.dll'
           Get-ChildItem "$buildDir\libgallium_wgl.dll", "$buildDir\libGLESv2.dll"
           # Register libgallium_wgl as the OpenGL ICD so system opengl32.dll dispatches to it
           $dllPath = "$buildDir\libgallium_wgl.dll"
@@ -121,12 +124,17 @@ jobs:
         run: mise run test
       - name: Run tests (Windows OpenGL — Mesa llvmpipe)
         if: ${{ matrix.variant == 'windows-x64-opengl' }}
+        timeout-minutes: 10
         shell: pwsh
         env:
           LIBGL_ALWAYS_SOFTWARE: "true"
           GALLIUM_DRIVER: llvmpipe
           ANGLE_DEFAULT_PLATFORM: gl
         run: |
+          # Suppress Win32 hard-error dialogs (DLL missing popup boxes) so any
+          # residual missing-dependency failures abort rather than blocking CI.
+          Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public class Win32ErrorMode { [DllImport("kernel32.dll")] public static extern int SetErrorMode(int uMode); }'
+          [Win32ErrorMode]::SetErrorMode(0x8003) | Out-Null  # SEM_FAILCRITICALERRORS|SEM_NOGPFAULTERRORBOX|SEM_NOOPENFILEERRORBOX
           $buildDir = "$env:MLN_FFI_BUILD_DIR"
           $env:PATH = "$buildDir;$env:PATH"
           mise run test
