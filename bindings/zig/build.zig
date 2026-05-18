@@ -90,7 +90,7 @@ fn vulkanLibraryName(target: std.Build.ResolvedTarget) []const u8 {
 fn isSupportedTarget(target: std.Build.ResolvedTarget, render_backend: RenderBackend) bool {
     return switch (render_backend) {
         .metal => target.result.os.tag == .macos,
-        .opengl => target.result.os.tag == .linux,
+        .opengl => target.result.os.tag == .linux or target.result.os.tag == .windows,
         .vulkan => target.result.os.tag == .macos or target.result.os.tag == .linux or
             target.result.os.tag == .windows,
     };
