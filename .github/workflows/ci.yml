@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, ci-test/windows-x64-opengl-rebased]
   pull_request:
     branches: [main]
 
