@@ -92,7 +92,7 @@ jobs:
           reg add 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\MSOGL' /v Version /t REG_DWORD /d 2 /f
       - run: mise run configure
       # Windows builds successfully, but native tests/examples are runtime-broken for now.
-      - if: ${{ inputs.variant == 'windows-x64-vulkan' }}
+      - if: ${{ inputs.variant == 'windows-x64-vulkan' || inputs.variant == 'windows-x64-opengl' }}
         run: mise run build
       - name: Run tests (Windows OpenGL — Mesa llvmpipe)
         if: ${{ inputs.variant == 'windows-x64-opengl' }}
